@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Métodos Numéricos RLC - UNMSM</title>
+  
+  <!-- Estilos propios -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- 1. Librería para procesar Excel/CSV (SheetJS) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <!-- 2. Librería para Gráficos Interactivos (Plotly.js) -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+
+  <div class="contenedor-app">
+
+    <!-- COLUMNA 1: MENÚ LATERAL (SIDEBAR) -->
+    <aside class="sidebar">
+      <div class="encabezado-sidebar">
+        <h2>FIEE UNMSM</h2>
+        <p>Circuito RLC - Métodos Numéricos</p>
+      </div>
+
+      <!-- Cargar archivo del Osciloscopio -->
+      <div class="bloque-panel">
+        <label for="fileInput"><b>1. Cargar CSV / Excel donde la primera columna tenga el tiempo en milisegundos y la segunda columna el voltaje del capacitor: </b></label>
+        <input type="file" id="fileInput" accept=".csv, .xlsx, .xls">
+      </div>
+
+      <!-- Parámetros del Circuito -->
+      <div class="bloque-panel">
+        <h3>Parámetros del Circuito</h3>
+        <label>Resistencia R (Ω): <input type="number" id="paramR" value="100"></label>
+        <label>Inductancia L (mH): <input type="number" id="paramL" value="3" step="0.1"></label>
+        <label>Capacitancia C (µF): <input type="number" id="paramC" value="0.33" step="0.01"></label>
+        <label>Voltaje Vin (V): <input type="number" id="paramVin" value="2.8" step="0.1"></label>
+        <label>Voltaje Objetivo (V): <input type="number" id="paramVobj" value="2.0" step="0.1"></label>
+      </div>
+
+      <!-- Menú de los 5 Métodos -->
+      <nav class="menu-navegacion">
+        <h3>Seleccionar Método</h3>
+        <button class="btn-nav activo" onclick="cambiarVista('vista-rk4', this)">1. Runge-Kutta 4 (RK4)</button>
+        <button class="btn-nav" onclick="cambiarVista('vista-analitico', this)">2. Método Analítico</button>
+        <button class="btn-nav" onclick="cambiarVista('vista-potencia', this)">3. Método Potencia</button>
+        <button class="btn-nav" onclick="cambiarVista('vista-potencia-inv', this)">4. Potencia Invertida</button>
+        <button class="btn-nav" onclick="cambiarVista('vista-newton', this)">5. Newton-Raphson</button>
+      </nav>
+    </aside>
+
+    <!-- COLUMNA 2: ÁREA PRINCIPAL -->
+    <main class="contenido-principal">
+
+      <!-- MÓDULO 1: RK4 -->
+      <section id="vista-rk4" class="modulo-vista">
+        <h2>1. Integración EDO: Runge-Kutta 4to Orden (RK4)</h2>
+        <p>Resuelve la ecuación del capacitor Vc(t) y la compara con la señal del osciloscopio.</p>
+        <div id="grafico-rk4"></div>
+      </section>
+
+      <!-- MÓDULO 2: ANALÍTICO -->
+      <section id="vista-analitico" class="modulo-vista oculto">
+        <h2>2. Método Analítico Directo</h2>
+        <p>Calcula el determinante característico det(A - λI) = 0 y los autovalores teóricos exactos.</p>
+        <div id="info-analitico"></div>
+      </section>
+
+      <!-- MÓDULO 3: MÉTODO DE LA POTENCIA -->
+<section id="vista-potencia" class="modulo-vista oculto">
+  <h2>3. Método de la Potencia (Autovalor Dominante λ_máx)</h2>
+  <p>Calcula de forma iterativa el autovalor de mayor magnitud y su autovector asociado.</p>
+
+  <div class="table-wrapper">
+    <table id="tabla-potencia">
+      <thead>
+        <tr>
+          <th>Iteración (k)</th>
+          <th>Autovalor (λ)</th>
+          <th>Autovector Normalizado [x₁, x₂]</th>
+          <th>Error Relativo</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="resultado-potencia" class="card-info"></div>
+</section>
+
+<!-- MÓDULO 4: POTENCIA INVERTIDA -->
+<section id="vista-potencia-inv" class="modulo-vista oculto">
+  <h2>4. Método de la Potencia Invertida (Autovalor Menor λ_mín)</h2>
+  <p>Aplica el algoritmo sobre la matriz inversa A⁻¹ para hallar el autovalor de menor magnitud.</p>
+
+  <div class="table-wrapper">
+    <table id="tabla-potencia-inv">
+      <thead>
+        <tr>
+          <th>Iteración (k)</th>
+          <th>Autovalor (λ)</th>
+          <th>Autovector Normalizado [x₁, x₂]</th>
+          <th>Error Relativo</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="resultado-potencia-inv" class="card-info"></div>
+</section>
+
+      <!-- MÓDULO 5: NEWTON-RAPHSON -->
+      <section id="vista-newton" class="modulo-vista oculto">
+        <h2>5. Newton-Raphson</h2>
+        <p>Encuentra el instante exacto t* en que el voltaje cruza el umbral deseado.</p>
+        <div id="info-newton"></div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Script con la lógica JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>

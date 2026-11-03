@@ -1,0 +1,157 @@
+/* 1. CONFIGURACIÓN GENERAL Y REINICIO */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+/* Contenedor principal de 2 columnas */
+.contenedor-app {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* 2. MENÚ LATERAL (SIDEBAR) */
+.sidebar {
+  width: 320px;
+  background-color: #0f172a; /* Azul muy oscuro */
+  color: #f8fafc;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+}
+
+.encabezado-sidebar h2 {
+  color: #38bdf8; /* Azul claro / celeste */
+  font-size: 1.4rem;
+}
+
+.encabezado-sidebar p {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+/* Cajas de inputs en el panel */
+.bloque-panel {
+  background-color: #1e293b;
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bloque-panel h3 {
+  font-size: 1rem;
+  color: #38bdf8;
+}
+
+.bloque-panel label {
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bloque-panel input[type="number"], 
+.bloque-panel input[type="file"] {
+  width: 55%;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+/* Estilos de los botones del menú */
+.menu-navegacion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-navegacion h3 {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.btn-nav {
+  padding: 12px;
+  background-color: #1e293b;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-nav:hover {
+  background-color: #334155;
+  color: #ffffff;
+}
+
+/* Botón activo (el que está seleccionado) */
+.btn-nav.activo {
+  background-color: #0284c7;
+  color: #ffffff;
+  font-weight: bold;
+  border-color: #38bdf8;
+}
+
+/* 3. ÁREA PRINCIPAL (PANEL DE TRABAJO) */
+.contenido-principal {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.modulo-vista {
+  background-color: #ffffff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.modulo-vista h2 {
+  color: #0f172a;
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+}
+
+.modulo-vista p {
+  color: #64748b;
+  margin-bottom: 15px;
+}
+
+/* REGLA MÁGICA: Oculta los módulos que no están seleccionados */
+.oculto {
+  display: none !important;
+}
+
+/* Estilos para contenedores de gráficos y tablas */
+#grafico-rk4 {
+  width: 100%;
+  height: 450px;
+  margin-top: 15px;
+}
+
+#info-analitico, #info-newton {
+  background-color: #f8fafc;
+  border-left: 4px solid #0284c7;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 0 6px 6px 0;
+  line-height: 1.6;
+}
