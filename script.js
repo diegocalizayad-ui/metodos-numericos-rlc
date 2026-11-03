@@ -103,19 +103,40 @@ function calcularTodo() {
   const Vobj = parseFloat(document.getElementById('paramVobj').value);
 
   // --- A. MÉTODO ANALÍTICO DIRECTO ---
-  const alpha = R / (2 * L);
-  const omega0_sq = 1 / (L * C);
-  const detA = omega0_sq;
-  const trA = -R / L;
-  const omega_d = Math.sqrt(Math.max(0, omega0_sq - alpha * alpha));
+const alpha = R / (2 * L);
+const omega0_sq = 1 / (L * C);
+const detA = omega0_sq;
+const trA = -R / L;
+const disc = alpha * alpha - omega0_sq;
 
-  document.getElementById('info-analitico').innerHTML = `
-    <p><b>Traza tr(A):</b> ${trA.toFixed(2)}</p>
-    <p><b>Determinante det(A):</b> ${detA.toExponential(4)}</p>
-    <p><b>Polinomio Característico:</b> λ² + ${(R/L).toFixed(2)}λ + ${detA.toExponential(3)} = 0</p>
-    <p><b>Autovalores Exactos (λ₁,₂):</b> -${alpha.toFixed(2)} ± j${omega_d.toFixed(2)} rad/s</p>
-    <p><b>Régimen del Circuito:</b> <b style="color: #0284c7;">Subamortiguado (Oscilatorio)</b></p>
-  `;
+let txtRegimen = "";
+let txtAutovalores = "";
+
+if (disc < 0) {
+  // Autovalores complejos conjugados
+  const omega_d = Math.sqrt(-disc);
+  txtRegimen = '<b style="color: #0284c7;">Subamortiguado (Oscilatorio)</b>';
+  txtAutovalores = `-${alpha.toFixed(2)} ± j${omega_d.toFixed(2)} rad/s`;
+} else if (disc > 0) {
+  // Autovalores reales distintos
+  const val = Math.sqrt(disc);
+  const l1 = -alpha + val;
+  const l2 = -alpha - val;
+  txtRegimen = '<b style="color: #16a34a;">Sobreamortiguado (Sin oscilación)</b>';
+  txtAutovalores = `${l1.toFixed(2)} y ${l2.toFixed(2)} rad/s (Reales)`;
+} else {
+  // Autovalores reales iguales
+  txtRegimen = '<b style="color: #eab308;">Críticamente Amortiguado</b>';
+  txtAutovalores = `-${alpha.toFixed(2)} rad/s (Real doble)`;
+}
+
+document.getElementById('info-analitico').innerHTML = `
+  <p><b>Traza tr(A):</b> ${trA.toFixed(2)}</p>
+  <p><b>Determinante det(A):</b> ${detA.toExponential(4)}</p>
+  <p><b>Polinomio Característico:</b> λ² + ${(R/L).toFixed(2)}λ + ${detA.toExponential(3)} = 0</p>
+  <p><b>Autovalores Exactos (λ₁,₂):</b> ${txtAutovalores}</p>
+  <p><b>Régimen del Circuito:</b> ${txtRegimen}</p>
+`;
 
   // --- B. EJECUCIÓN DE POTENCIA Y POTENCIA INVERTIDA ---
   const A = [
