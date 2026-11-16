@@ -3,128 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Métodos Numéricos RLC - UNMSM</title>
-  
-  <!-- Estilos propios -->
+  <title>FIEE UNMSM - Circuito RLC Métodos Numéricos</title>
   <link rel="stylesheet" href="styles.css">
-
-  <!-- 1. Librería para procesar Excel/CSV (SheetJS) -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  
-  <!-- 2. Librería para Gráficos Interactivos (Plotly.js) -->
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
-  <div class="contenedor-app">
-
-    <!-- COLUMNA 1: MENÚ LATERAL (SIDEBAR) -->
+  <div class="contenedor-principal">
+    <!-- BARRA LATERAL IZQUIERDA -->
     <aside class="sidebar">
-      <div class="encabezado-sidebar">
-        <h2>FIEE UNMSM</h2>
-        <p>Circuito RLC - Métodos Numéricos</p>
+      <div class="sidebar-header">
+        <div class="sidebar-titulos">
+          <h2>FIEE UNMSM</h2>
+          <p>Circuito RLC - Métodos Numéricos</p>
+        </div>
+        <img src="logofiee.avif" alt="Logo FIEE UNMSM" class="logo-fiee">
       </div>
 
-      <!-- Cargar archivo del Osciloscopio -->
+      <!-- 1. Carga de datos experimentales -->
       <div class="bloque-panel">
-        <label for="fileInput"><b>1. Cargar CSV / Excel donde la primera columna tenga el tiempo en milisegundos y la segunda columna el voltaje del capacitor: </b></label>
+        <label for="fileInput" class="texto-archivo">
+          1. Cargar CSV / Excel donde la primera columna tenga el tiempo en milisegundos y la segunda columna el voltaje del capacitor:
+        </label>
         <input type="file" id="fileInput" accept=".csv, .xlsx, .xls">
       </div>
 
-      <!-- Parámetros del Circuito -->
+      <!-- 2. Parámetros físicos del circuito -->
       <div class="bloque-panel">
         <h3>Parámetros del Circuito</h3>
-        <label>Resistencia R (Ω): <input type="number" id="paramR" value="100"></label>
-        <label>Inductancia L (mH): <input type="number" id="paramL" value="3" step="0.1"></label>
-        <label>Capacitancia C (µF): <input type="number" id="paramC" value="0.33" step="0.01"></label>
-        <label>Voltaje Vin (V): <input type="number" id="paramVin" value="2.8" step="0.1"></label>
-        <label>Voltaje Objetivo (V): <input type="number" id="paramVobj" value="2.0" step="0.1"></label>
+
+        <div class="fila-input">
+          <label for="paramR">Resistencia R (Ω):</label>
+          <input type="number" id="paramR" value="100" step="any">
+        </div>
+
+        <div class="fila-input">
+          <label for="paramL">Inductancia L (mH):</label>
+          <input type="number" id="paramL" value="3" step="any">
+        </div>
+
+        <div class="fila-input">
+          <label for="paramC">Capacitancia C (µF):</label>
+          <input type="number" id="paramC" value="0.33" step="any">
+        </div>
+
+        <div class="fila-input">
+          <label for="paramVin">Voltaje Vin (V):</label>
+          <input type="number" id="paramVin" value="2.8" step="any">
+        </div>
+
+        <div class="fila-input">
+          <label for="paramVobj">Voltaje Objetivo (V):</label>
+          <input type="number" id="paramVobj" value="2.0" step="any">
+        </div>
       </div>
 
-      <!-- Menú de los 5 Métodos -->
-      <nav class="menu-navegacion">
-        <h3>Seleccionar Método</h3>
+      <!-- 3. Menú de navegación entre métodos -->
+      <div class="menu-metodos">
+        <span class="subtitulo-menu">SELECCIONAR MÉTODO</span>
         <button class="btn-nav activo" onclick="cambiarVista('vista-rk4', this)">1. Runge-Kutta 4 (RK4)</button>
         <button class="btn-nav" onclick="cambiarVista('vista-analitico', this)">2. Método Analítico</button>
         <button class="btn-nav" onclick="cambiarVista('vista-potencia', this)">3. Método Potencia</button>
         <button class="btn-nav" onclick="cambiarVista('vista-potencia-inv', this)">4. Potencia Invertida</button>
         <button class="btn-nav" onclick="cambiarVista('vista-newton', this)">5. Newton-Raphson</button>
-      </nav>
+      </div>
     </aside>
 
-    <!-- COLUMNA 2: ÁREA PRINCIPAL -->
+    <!-- ÁREA PRINCIPAL DE RESULTADOS -->
     <main class="contenido-principal">
 
-      <!-- MÓDULO 1: RK4 -->
+      <!-- ================= VISTA 1: RK4 ================= -->
       <section id="vista-rk4" class="modulo-vista">
-        <h2>1. Integración EDO: Runge-Kutta 4to Orden (RK4)</h2>
-        <p>Resuelve la ecuación del capacitor Vc(t) y la compara con la señal del osciloscopio.</p>
+        <h2>1. Integración EDO: Runge-Kutta de 4to Orden (RK4)</h2>
+
+        <div class="guia-metodo">
+          <div class="guia-grid">
+            <div class="guia-item">
+              <h4>¿En qué consiste?</h4>
+              <p>Es un algoritmo numérico paso a paso de alta precisión que resuelve el sistema de Ecuaciones Diferenciales Ordinarias (EDOs) del circuito RLC. En cada intervalo de tiempo (Δt = 1 µs), evalúa cuatro pendientes intermedias (<i>k₁, k₂, k₃, k₄</i>) para calcular cómo evolucionan el voltaje en el capacitor <i>Vc(t)</i> y la corriente en el inductor <i>iL(t)</i>.</p>
+            </div>
+            <div class="guia-item">
+              <h4>¿Para qué sirve en ingeniería?</h4>
+              <p>Permite reconstruir la <b>curva completa de respuesta transitoria</b> en el tiempo sin despejar fórmulas analíticas complejas. Además, valida el modelo matemático superponiéndolo con las mediciones reales extraídas de un osciloscopio de laboratorio (archivo CSV o Excel).</p>
+            </div>
+          </div>
+          <div class="guia-ejemplo">
+            <b>Ejemplo práctico:</b> Al energizar el circuito con <i>Vin = 2.8 V</i>, <i>R = 100 Ω</i>, <i>L = 3 mH</i> y <i>C = 0.33 µF</i>, RK4 traza microsegundo a microsegundo cómo se carga el capacitor y muestra el sobreimpulso transitorio (pico cercano a 3.19 V) antes de estabilizarse en 2.8 V, permitiendo compararlo con la señal del protoboard.
+          </div>
+        </div>
+
         <div id="grafico-rk4"></div>
       </section>
 
-      <!-- MÓDULO 2: ANALÍTICO -->
+      <!-- ================= VISTA 2: MÉTODO ANALÍTICO ================= -->
       <section id="vista-analitico" class="modulo-vista oculto">
-        <h2>2. Método Analítico Directo</h2>
-        <p>Calcula el determinante característico det(A - λI) = 0 y los autovalores teóricos exactos.</p>
-        <div id="info-analitico"></div>
+        <h2>2. Método Analítico Directo (Espacio de Estados)</h2>
+
+        <div class="guia-metodo">
+          <div class="guia-grid">
+            <div class="guia-item">
+              <h4>¿En qué consiste?</h4>
+              <p>Representa el circuito RLC en forma matricial (<i>ẋ = Ax + Bu</i>) y resuelve de manera exacta su polinomio característico <i>det(A − λI) = 0</i> a partir de la traza y el determinante de la matriz <i>A</i>. Con ello obtiene los autovalores exactos (<i>λ₁, λ₂</i>) del sistema.</p>
+            </div>
+            <div class="guia-item">
+              <h4>¿Para qué sirve en ingeniería?</h4>
+              <p>Funciona como <b>referencia teórica exacta (Ground Truth)</b> para diagnosticar de inmediato la estabilidad y el régimen dinámico del circuito: <b>Subamortiguado</b> (oscila), <b>Críticamente Amortiguado</b> (respuesta más rápida sin oscilar) o <b>Sobreamortiguado</b> (decaimiento lento sin rebotes).</p>
+            </div>
+          </div>
+          <div class="guia-ejemplo">
+            <b>Ejemplo práctico:</b> Para <i>L = 3 mH</i> y <i>C = 0.33 µF</i>, la resistencia crítica es <i>190.69 Ω</i>. Si ingresas <i>R = 100 Ω</i>, entrega autovalores complejos conjugados (<i>−16666.67 ± j27044.91 rad/s</i>), confirmando oscilación. Si subes a <i>R = 350 Ω</i>, arroja dos raíces reales negativas, demostrando que no oscilará.
+          </div>
+        </div>
+
+        <div id="info-analitico" class="caja-resultado"></div>
       </section>
 
-      <!-- MÓDULO 3: MÉTODO DE LA POTENCIA -->
-<section id="vista-potencia" class="modulo-vista oculto">
-  <h2>3. Método de la Potencia (Autovalor Dominante λ_máx)</h2>
-  <p>Calcula de forma iterativa el autovalor de mayor magnitud y su autovector asociado.</p>
+      <!-- ================= VISTA 3: MÉTODO DE LA POTENCIA ================= -->
+      <section id="vista-potencia" class="modulo-vista oculto">
+        <h2>3. Método de la Potencia (Autovalor Dominante)</h2>
 
-  <div class="table-wrapper">
-    <table id="tabla-potencia">
-      <thead>
-        <tr>
-          <th>Iteración (k)</th>
-          <th>Autovalor (λ)</th>
-          <th>Autovector Normalizado [x₁, x₂]</th>
-          <th>Error Relativo</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+        <div class="guia-metodo">
+          <div class="guia-grid">
+            <div class="guia-item">
+              <h4>¿En qué consiste?</h4>
+              <p>Es un método iterativo matricial (<i>yₖ = A · xₖ₋₁</i>) que multiplica repetidamente la matriz de estados <i>A</i> por un vector semilla y lo normaliza en cada paso. De forma progresiva, converge al <b>autovalor de mayor magnitud absoluta (|λ_máx|)</b> y a su autovector asociado.</p>
+            </div>
+            <div class="guia-item">
+              <h4>¿Para qué sirve en ingeniería?</h4>
+              <p>Identifica el <b>modo transitorio más rápido</b> del circuito sin factorizar polinomios de grado superior. En diseño electrónico y simulación, indica cuál es la componente de cambio más veloz del sistema y define qué tan pequeño debe ser el paso de muestreo.</p>
+            </div>
+          </div>
+          <div class="guia-ejemplo">
+            <b>Ejemplo práctico:</b> En régimen sobreamortiguado con <i>R = 350 Ω</i>, <i>L = 3 mH</i> y <i>C = 0.33 µF</i>, existen dos modos reales: <i>λ₁ ≈ −9533 rad/s</i> y <i>λ₂ ≈ −107133 rad/s</i>. El Método de la Potencia converge hacia <b>−107133 rad/s</b> por tener mayor magnitud, revelando la velocidad del transitorio inicial más rápido.
+          </div>
+        </div>
 
-  <div id="resultado-potencia" class="card-info"></div>
-</section>
+        <div id="resultado-potencia" class="caja-resultado"></div>
+        <div class="contenedor-tabla">
+          <table id="tabla-potencia" class="tabla-datos">
+            <thead>
+              <tr>
+                <th>Iteración</th>
+                <th>Autovalor (λ)</th>
+                <th>Autovector Normalizado</th>
+                <th>Error Relativo</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
 
-<!-- MÓDULO 4: POTENCIA INVERTIDA -->
-<section id="vista-potencia-inv" class="modulo-vista oculto">
-  <h2>4. Método de la Potencia Invertida (Autovalor Menor λ_mín)</h2>
-  <p>Aplica el algoritmo sobre la matriz inversa A⁻¹ para hallar el autovalor de menor magnitud.</p>
+      <!-- ================= VISTA 4: POTENCIA INVERTIDA ================= -->
+      <section id="vista-potencia-inv" class="modulo-vista oculto">
+        <h2>4. Método de la Potencia Invertida (Autovalor Menor)</h2>
 
-  <div class="table-wrapper">
-    <table id="tabla-potencia-inv">
-      <thead>
-        <tr>
-          <th>Iteración (k)</th>
-          <th>Autovalor (λ)</th>
-          <th>Autovector Normalizado [x₁, x₂]</th>
-          <th>Error Relativo</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+        <div class="guia-metodo">
+          <div class="guia-grid">
+            <div class="guia-item">
+              <h4>¿En qué consiste?</h4>
+              <p>Aplica el mismo proceso iterativo del método de la potencia, pero operando sobre la <b>matriz inversa (A⁻¹)</b>. Como los autovalores de <i>A⁻¹</i> son los inversos (<i>1/λᵢ</i>) de los autovalores de <i>A</i>, el valor dominante de la inversa corresponde al <b>autovalor de menor magnitud (|λ_mín|)</b> del circuito.</p>
+            </div>
+            <div class="guia-item">
+              <h4>¿Para qué sirve en ingeniería?</h4>
+              <p>Determina el <b>modo de decaimiento más lento</b> del sistema, que gobierna cuánto tiempo tarda en disiparse por completo la energía almacenada. Permite calcular la constante de tiempo dominante (<i>τ = 1 / |λ_mín|</i>) y el tiempo total de establecimiento (<i>tₛ ≈ 5τ</i>).</p>
+            </div>
+          </div>
+          <div class="guia-ejemplo">
+            <b>Ejemplo práctico:</b> Con <i>R = 350 Ω</i>, <i>L = 3 mH</i> y <i>C = 0.33 µF</i>, la Potencia Invertida converge al autovalor menor <b>λ₁ ≈ −9533 rad/s</b>. Esto indica una constante de tiempo lenta de <i>τ = 1 / 9533 ≈ 0.105 ms</i>, por lo que el capacitor tardará unos <i>5τ ≈ 0.52 ms</i> en estabilizarse por completo.
+          </div>
+        </div>
 
-  <div id="resultado-potencia-inv" class="card-info"></div>
-</section>
+        <div id="resultado-potencia-inv" class="caja-resultado"></div>
+        <div class="contenedor-tabla">
+          <table id="tabla-potencia-inv" class="tabla-datos">
+            <thead>
+              <tr>
+                <th>Iteración</th>
+                <th>Autovalor (λ)</th>
+                <th>Autovector Normalizado</th>
+                <th>Error Relativo</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
 
-      <!-- MÓDULO 5: NEWTON-RAPHSON -->
+      <!-- ================= VISTA 5: NEWTON-RAPHSON ================= -->
       <section id="vista-newton" class="modulo-vista oculto">
-        <h2>5. Newton-Raphson</h2>
-        <p>Encuentra el instante exacto t* en que el voltaje cruza el umbral deseado.</p>
-        <div id="info-newton"></div>
+        <h2>5. Método de Newton-Raphson (Cálculo de Tiempo de Disparo)</h2>
+
+        <div class="guia-metodo">
+          <div class="guia-grid">
+            <div class="guia-item">
+              <h4>¿En qué consiste?</h4>
+              <p>Es un algoritmo abierto de búsqueda de raíces con convergencia cuadrática que utiliza la derivada (recta tangente) para resolver ecuaciones no lineales mediante <i>tₖ₊₁ = tₖ − f(tₖ)/f'(tₖ)</i>. Aquí se aplica a la función de error <i>f(t) = Vc(t) − V_obj = 0</i>.</p>
+            </div>
+            <div class="guia-item">
+              <h4>¿Para qué sirve en ingeniería?</h4>
+              <p>Calcula con precisión de sub-microsegundos el <b>instante exacto (t*)</b> en que el voltaje del capacitor cruza un umbral específico (<i>V_obj</i>). Es clave para diseñar temporizadores analógicos, comparadores de voltaje, disparadores Schmitt-Trigger y circuitos de retardo.</p>
+            </div>
+          </div>
+          <div class="guia-ejemplo">
+            <b>Ejemplo práctico:</b> Si necesitas activar una compuerta lógica o un relé cuando el capacitor alcance <i>V_obj = 2.0 V</i> con una fuente de <i>Vin = 2.8 V</i> (y <i>R = 100 Ω</i>), Newton-Raphson resuelve la ecuación exponencial-trigonométrica en pocas iteraciones y halla el instante exacto: <b>t* ≈ 0.0563 ms (56.3 µs)</b>.
+          </div>
+        </div>
+
+        <div id="info-newton" class="caja-resultado"></div>
       </section>
 
     </main>
-
   </div>
 
-  <!-- Script con la lógica JavaScript -->
   <script src="script.js"></script>
 </body>
 </html>

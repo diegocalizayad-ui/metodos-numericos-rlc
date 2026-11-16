@@ -23,8 +23,8 @@ function cambiarVista(idSeccion, botonPresionado) {
 // 2. ALGORITMOS: POTENCIA Y POTENCIA INVERTIDA
 // =========================================================
 function calcularMetodoPotencia(A, esInvertida = false) {
-  let x = [1.0, 1.0]; 
-  let tol = 1e-4;     
+  let x = [1.0, 1.0];
+  let tol = 1e-4;
   let maxIter = 10;
   let historial = [];
   let lambdaAnt = 0;
@@ -69,7 +69,7 @@ function calcularMetodoPotencia(A, esInvertida = false) {
   return historial;
 }
 
-function renderizarPotenciaMatematica(idTabla, idResultado, historial, esInvertida) {
+function renderizarPotenciaMatematica(idTabla, idResultado, historial, esInvertida, R, L, C) {
   const tbody = document.querySelector(`#${idTabla} tbody`);
   tbody.innerHTML = '';
 
@@ -86,9 +86,28 @@ function renderizarPotenciaMatematica(idTabla, idResultado, historial, esInverti
   const ultimo = historial[historial.length - 1];
   const tipoAutovalor = esInvertida ? "menor magnitud (λ_mín)" : "dominante (λ_máx)";
 
+  const alpha = R / (2 * L);
+  const omega0_sq = 1 / (L * C);
+  const disc = alpha * alpha - omega0_sq;
+
+  let txtRegimen = "";
+  let txtExplicacion = "";
+
+  if (disc > 1e-6) {
+    txtRegimen = '<b style="color: #16a34a;">Sobreamortiguado (Autovalor Real puro)</b>';
+    txtExplicacion = `Al ser un autovalor real (λ = ${ultimo.lambda.toFixed(2)} rad/s), no hay oscilaciones y la energía decae exponencialmente.`;
+  } else if (disc < -1e-6) {
+    txtRegimen = '<b style="color: #0284c7;">Subamortiguado (Autovalores Complejos Conjugados)</b>';
+    txtExplicacion = `Existen oscilaciones transitorias; el algoritmo real estima la magnitud de envolvente del sistema.`;
+  } else {
+    txtRegimen = '<b style="color: #eab308;">Críticamente Amortiguado</b>';
+    txtExplicacion = `El sistema regresa al equilibrio en el menor tiempo posible sin oscilar.`;
+  }
+
   document.getElementById(idResultado).innerHTML = `
-    <p><b>Resultado final en iteración ${ultimo.iter}:</b> Autovalor λ = <b>${ultimo.lambda.toFixed(4)}</b> | Autovector v = <b>[${ultimo.x1.toFixed(4)}, ${ultimo.x2.toFixed(4)}]ᵀ</b></p>
-    <p><b>¿Qué hallamos y qué significa?:</b> Este método calcula el autovalor de <b>${tipoAutovalor}</b> de la matriz de estados A. Matemáticamente, λ representa la tasa de cambio del sistema, mientras que el autovector v indica la relación de proporción entre el voltaje Vc y su derivada dVc/dt.</p>
+    <p><b>Régimen Detectado:</b> ${txtRegimen}</p>
+    <p><b>Resultado en iteración ${ultimo.iter}:</b> Autovalor λ = <b>${ultimo.lambda.toFixed(4)} rad/s</b> | Autovector v = <b>[${ultimo.x1.toFixed(4)}, ${ultimo.x2.toFixed(4)}]ᵀ</b></p>
+    <p><b>¿Qué hallamos y qué significa?:</b> Este método calcula el autovalor de <b>${tipoAutovalor}</b> de la matriz de estados A. ${txtExplicacion}</p>
   `;
 }
 
@@ -96,47 +115,48 @@ function renderizarPotenciaMatematica(idTabla, idResultado, historial, esInverti
 // 3. FUNCIÓN PRINCIPAL DE CÁLCULO
 // =========================================================
 function calcularTodo() {
-  const R = parseFloat(document.getElementById('paramR').value);
-  const L = parseFloat(document.getElementById('paramL').value) / 1000.0; 
-  const C = parseFloat(document.getElementById('paramC').value) / 1e6;    
-  const Vin = parseFloat(document.getElementById('paramVin').value);
-  const Vobj = parseFloat(document.getElementById('paramVobj').value);
+  const leerNum = (id) => parseFloat(document.getElementById(id).value.replace(',', '.'));
+
+  const R = leerNum('paramR');
+  const L = leerNum('paramL') / 1000.0;
+  const C = leerNum('paramC') / 1e6;
+  const Vin = leerNum('paramVin');
+  const Vobj = leerNum('paramVobj');
+
+  if (isNaN(R) || isNaN(L) || isNaN(C) || L <= 0 || C <= 0) return;
 
   // --- A. MÉTODO ANALÍTICO DIRECTO ---
-const alpha = R / (2 * L);
-const omega0_sq = 1 / (L * C);
-const detA = omega0_sq;
-const trA = -R / L;
-const disc = alpha * alpha - omega0_sq;
+  const alpha = R / (2 * L);
+  const omega0_sq = 1 / (L * C);
+  const detA = omega0_sq;
+  const trA = -R / L;
+  const disc = alpha * alpha - omega0_sq;
 
-let txtRegimen = "";
-let txtAutovalores = "";
+  let txtRegimen = "";
+  let txtAutovalores = "";
 
-if (disc < 0) {
-  // Autovalores complejos conjugados
-  const omega_d = Math.sqrt(-disc);
-  txtRegimen = '<b style="color: #0284c7;">Subamortiguado (Oscilatorio)</b>';
-  txtAutovalores = `-${alpha.toFixed(2)} ± j${omega_d.toFixed(2)} rad/s`;
-} else if (disc > 0) {
-  // Autovalores reales distintos
-  const val = Math.sqrt(disc);
-  const l1 = -alpha + val;
-  const l2 = -alpha - val;
-  txtRegimen = '<b style="color: #16a34a;">Sobreamortiguado (Sin oscilación)</b>';
-  txtAutovalores = `${l1.toFixed(2)} y ${l2.toFixed(2)} rad/s (Reales)`;
-} else {
-  // Autovalores reales iguales
-  txtRegimen = '<b style="color: #eab308;">Críticamente Amortiguado</b>';
-  txtAutovalores = `-${alpha.toFixed(2)} rad/s (Real doble)`;
-}
+  if (disc < -1e-6) {
+    const omega_d = Math.sqrt(-disc);
+    txtRegimen = '<b style="color: #0284c7;">Subamortiguado (Oscilatorio)</b>';
+    txtAutovalores = `-${alpha.toFixed(2)} ± j${omega_d.toFixed(2)} rad/s`;
+  } else if (disc > 1e-6) {
+    const val = Math.sqrt(disc);
+    const l1 = -alpha + val;
+    const l2 = -alpha - val;
+    txtRegimen = '<b style="color: #16a34a;">Sobreamortiguado (Sin oscilación)</b>';
+    txtAutovalores = `${l1.toFixed(2)} y ${l2.toFixed(2)} rad/s (Reales)`;
+  } else {
+    txtRegimen = '<b style="color: #eab308;">Críticamente Amortiguado</b>';
+    txtAutovalores = `-${alpha.toFixed(2)} rad/s (Real doble)`;
+  }
 
-document.getElementById('info-analitico').innerHTML = `
-  <p><b>Traza tr(A):</b> ${trA.toFixed(2)}</p>
-  <p><b>Determinante det(A):</b> ${detA.toExponential(4)}</p>
-  <p><b>Polinomio Característico:</b> λ² + ${(R/L).toFixed(2)}λ + ${detA.toExponential(3)} = 0</p>
-  <p><b>Autovalores Exactos (λ₁,₂):</b> ${txtAutovalores}</p>
-  <p><b>Régimen del Circuito:</b> ${txtRegimen}</p>
-`;
+  document.getElementById('info-analitico').innerHTML = `
+    <p><b>Traza tr(A):</b> ${trA.toFixed(2)}</p>
+    <p><b>Determinante det(A):</b> ${detA.toExponential(4)}</p>
+    <p><b>Polinomio Característico:</b> λ² + ${(R / L).toFixed(2)}λ + ${detA.toExponential(3)} = 0</p>
+    <p><b>Autovalores Exactos (λ₁,₂):</b> ${txtAutovalores}</p>
+    <p><b>Régimen del Circuito:</b> ${txtRegimen}</p>
+  `;
 
   // --- B. EJECUCIÓN DE POTENCIA Y POTENCIA INVERTIDA ---
   const A = [
@@ -145,23 +165,23 @@ document.getElementById('info-analitico').innerHTML = `
   ];
 
   const histPot = calcularMetodoPotencia(A, false);
-  renderizarPotenciaMatematica('tabla-potencia', 'resultado-potencia', histPot, false);
+  renderizarPotenciaMatematica('tabla-potencia', 'resultado-potencia', histPot, false, R, L, C);
 
   const histPotInv = calcularMetodoPotencia(A, true);
-  renderizarPotenciaMatematica('tabla-potencia-inv', 'resultado-potencia-inv', histPotInv, true);
+  renderizarPotenciaMatematica('tabla-potencia-inv', 'resultado-potencia-inv', histPotInv, true, R, L, C);
 
   // --- C. RUNGE-KUTTA 4TO ORDEN (RK4) ---
-  const dt = 1e-6;          
-  const t_final = 0.0003;   
+  const dt = 1e-6;
+  const t_final = 0.0003;
   const pasos = Math.floor(t_final / dt);
 
   let vec_t = [];
   let vec_Vc = [];
-  let y1 = 0, y2 = 0; 
+  let y1 = 0, y2 = 0;
 
   for (let i = 0; i < pasos; i++) {
     let t = i * dt;
-    vec_t.push(t * 1000); 
+    vec_t.push(t * 1000);
     vec_Vc.push(y1);
 
     let f1 = (y_1, y_2) => y_2;
@@ -205,14 +225,35 @@ document.getElementById('info-analitico').innerHTML = `
   });
 
   // --- D. NEWTON-RAPHSON ---
-  let t_i = 0.02; 
+  if (disc >= 0 && Vobj >= Vin) {
+    document.getElementById('info-newton').innerHTML = `
+      <p><b>Voltaje Objetivo:</b> ${Vobj} V</p>
+      <p style="color: #ef4444;"><b>Sin cruce:</b> En régimen sin oscilación, Vc(t) nunca supera Vin (${Vin} V).</p>
+    `;
+    return;
+  }
 
-  for (let k = 0; k < 6; k++) {
-    let t_sec = t_i / 1000;
-    let Vc_t = Vin * (1 - Math.exp(-alpha * t_sec) * (Math.cos(omega_d * t_sec) + (alpha / omega_d) * Math.sin(omega_d * t_sec)));
+  let t_i = 0.03; // Semilla inicial en ms
+  for (let k = 0; k < 10; k++) {
+    let t_sec = Math.max(1e-7, t_i / 1000);
+    let Vc_t = 0, dVc_dt = 0;
+
+    if (disc < -1e-6) {
+      let omega_d = Math.sqrt(-disc);
+      Vc_t = Vin * (1 - Math.exp(-alpha * t_sec) * (Math.cos(omega_d * t_sec) + (alpha / omega_d) * Math.sin(omega_d * t_sec)));
+      dVc_dt = Vin * (omega0_sq / omega_d) * Math.exp(-alpha * t_sec) * Math.sin(omega_d * t_sec);
+    } else if (disc > 1e-6) {
+      let val = Math.sqrt(disc);
+      let s1 = -alpha + val;
+      let s2 = -alpha - val;
+      Vc_t = Vin * (1 + (s2 * Math.exp(s1 * t_sec) - s1 * Math.exp(s2 * t_sec)) / (s1 - s2));
+      dVc_dt = Vin * ((s1 * s2) / (s1 - s2)) * (Math.exp(s1 * t_sec) - Math.exp(s2 * t_sec));
+    } else {
+      Vc_t = Vin * (1 - Math.exp(-alpha * t_sec) * (1 + alpha * t_sec));
+      dVc_dt = Vin * alpha * alpha * t_sec * Math.exp(-alpha * t_sec);
+    }
+
     let f_t = Vc_t - Vobj;
-    let dVc_dt = Vin * Math.exp(-alpha * t_sec) * ((alpha * alpha / omega_d + omega_d) * Math.sin(omega_d * t_sec));
-
     if (Math.abs(dVc_dt) > 1e-9) {
       t_i = t_i - (f_t / (dVc_dt / 1000));
     }
